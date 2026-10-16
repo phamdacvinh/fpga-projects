@@ -1,0 +1,93 @@
+module chonmode(
+    input clk,
+    input rst,
+    input start,
+    input [1:0] mode,
+    output reg [5:0] led
+);
+
+reg [1:0] mode_prev;
+reg [4:0] step;         
+reg [1:0] cycle_cnt;   
+always @(posedge clk) 
+begin
+    if (rst) 
+    begin
+        led <= 6'b000000;
+        mode_prev <= 2'b11;
+        step <= 0;
+        cycle_cnt <= 0;
+    end
+	 else if (start) 
+    begin
+        if (mode != mode_prev) 
+		  begin
+            case(mode)
+                2'b00: led <= 6'b001100;  // MODE 1
+                2'b01: led <= 6'b010111;  // MODE 2
+                2'b10: led <= 6'b111111;  // MODE 3
+                2'b11: led <= 6'b000000;  // MODE 4
+            endcase
+            step <= 0;
+            cycle_cnt <= 0;
+				mode_prev <= mode;
+        end
+		  else 
+        begin
+            // ---------------- MODE 1 ----------------
+            if(mode==2'b00) 
+				begin
+                if(led==6'b000000) led <= 6'b001100;
+                else
+						begin
+						led[5:3]<=led[5:3]<<1;
+						led[2:0]<=led[2:0]>>1;
+						end
+            end
+
+            // ---------------- MODE 2 ----------------
+				 else if(mode==2'b01) 
+            begin
+                if(led==6'b111111) led <= led;
+                else led <= led+1;
+            end
+				// ---------------- MODE 3 ----------------
+				else if(mode==2'b10) 
+				begin
+                if(led==6'b000000) led <=6'b111111 ;
+                else led <= (led<<1);
+            end
+				// ---------------- MODE 4 ----------------
+           else if (mode == 2'b11) 
+            begin
+                case (step)
+                    0: led <= 6'b000000;
+                    1: led <= 6'b000001;
+                    2: led <= 6'b000011;
+                    3: led <= 6'b000111;
+						  4: led <= 6'b001111;
+						  5: led <= 6'b011111;
+						  6: led <= 6'b111111;
+						  7: led <= 6'b011111;
+						  8: led <= 6'b001111;
+						  9: led <= 6'b000111;
+						  10: led <= 6'b000011;
+						  11: led <= 6'b000001;
+                endcase
+
+                if (step < 12)
+                    step <= step + 1;
+                else
+                    step <= 0;
+            end
+			  
+			  
+        end
+    end
+    else 
+    begin
+        led <= led; // giữ nguyên khi start = 0
+    end
+end
+
+endmodule
